@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}Retro Sneaks - Log In{% endblock %}
+
+{% block extra_css %}
+  .page-container {
+    position: relative;
+    min-height: 80vh;
+    width: 100%;
+    background-image: url("{{ STATIC_URL }}img/bg.png");
+    background-size: cover;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 20px;
+  }
+
+  .form-container {
+    width: 100%;
+    max-width: 550px;
+    background-color: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin-right: 40px;
+  }
+
+  .divider {
+    position: relative;
+    text-align: center;
+    margin: 1.5rem 0;
+  }
+
+  .divider::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background-color: #e5e7eb;
+    z-index: -1;
+  }
+
+  @media (max-width: 768px) {
+    .page-container {
+      justify-content: center;
+      padding: 10px;
+    }
+
+    .form-container {
+      margin-right: 0;
+    }
+  }
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <!-- Form Container -->
+  <div class="form-container">
+    <div class="p-8 md:p-10">
+      <h1 class="text-3xl font-bold text-gray-800 mb-8 text-center">
+        Log in
+      </h1>
+
+      <!-- Social Login Buttons -->
+      <div class="space-y-4 mb-6">
+        <a
+          href="#"
+          class="flex items-center justify-center w-full py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition duration-300"
+        >
+          <img src="{{ STATIC_URL }}img/fb.png" alt="Facebook" class="h-6 w-6 mr-3" />
+          Continue with Facebook
+        </a>
+        <a
+          href="#"
+          class="flex items-center justify-center w-full py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition duration-300"
+        >
+          <img src="{{ STATIC_URL }}img/google.png" alt="Google" class="h-6 w-6 mr-3" />
+          Continue with Google
+        </a>
+      </div>
+
+      <div class="divider">
+        <span class="bg-white px-4 text-gray-500 text-sm">OR</span>
+      </div>
+
+      <form method="post" action="{% url 'login' %}" class="mt-6">
+        {% csrf_token %}
+        <div class="mb-5">
+          <label for="id_username" class="block text-gray-600 text-sm mb-2">Username or Email</label>
+          {{ form.username }}
+        </div>
+
+        <div class="mb-5">
+          <div class="flex justify-between items-center mb-2">
+            <label for="id_password" class="block text-gray-600 text-sm">Your password</label>
+            <button type="button" class="text-gray-500 flex items-center text-sm" id="toggle-password">
+              <span>Show</span>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+            </button>
+          </div>
+          {{ form.password }}
+        </div>
+
+        <div class="flex justify-between items-center mb-6">
+          <div class="flex items-center">
+            <input type="checkbox" id="remember" name="remember" class="h-4 w-4 text-brand-blue focus:ring-brand-blue border-gray-300 rounded" />
+            <label for="remember" class="ml-2 block text-gray-600 text-sm">Remember me</label>
+          </div>
+          <a href="#" class="text-gray-600 hover:text-gray-800 text-sm">Forgot your password?</a>
+        </div>
+
+        <button type="submit" class="w-full bg-indigo-400 hover:bg-indigo-500 text-white font-medium py-3 px-4 rounded-lg

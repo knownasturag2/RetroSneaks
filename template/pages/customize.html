@@ -1,0 +1,306 @@
+{% extends 'base.html' %}
+
+{% block title %}Customize Your Sneaker - Retro Sneaks{% endblock %}
+
+{% block extra_css %}
+  .color-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.2s;
+    border: 2px solid transparent;
+  }
+  .color-circle:hover {
+    transform: scale(1.1);
+  }
+  .color-circle.selected {
+    border: 2px solid #000;
+    box-shadow: 0 0 0 2px white;
+  }
+  .pattern-btn {
+    transition: all 0.2s;
+  }
+  .pattern-btn:hover {
+    transform: translateY(-2px);
+  }
+  .pattern-btn.selected {
+    background-color: #4f46e5;
+    color: white;
+  }
+  .blob {
+    position: absolute;
+    z-index: -1;
+    border-radius: 50%;
+  }
+{% endblock %}
+
+{% block head_extra %}
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Elements
+      const shoeSelect = document.getElementById('id_shoe');
+      const baseColorSelect = document.getElementById('id_base_color');
+      const accentColorSelect = document.getElementById('id_accent_color');
+      const patternSelect = document.getElementById('id_sole_pattern');
+      const quantityInput = document.getElementById('id_quantity');
+      const priceDisplay = document.getElementById('total-price');
+      const basePrice = document.getElementById('base-price');
+      const customizationPrice = document.getElementById('customization-price');
+      const shoeImage = document.getElementById('shoe-preview');
+
+      // Color circles
+      const baseColorCircles = document.querySelectorAll('.base-color-circle');
+      const accentColorCircles = document.querySelectorAll('.accent-color-circle');
+      const patternButtons = document.querySelectorAll('.pattern-btn');
+
+      // Function to update price
+      function updatePrice() {
+        const shoeId = shoeSelect.value;
+        const baseColorId = baseColorSelect.value;
+        const accentColorId = accentColorSelect.value;
+        const patternId = patternSelect.value;
+        const quantity = quantityInput.value;
+
+        if (!shoeId) {
+          return;
+        }
+
+        // Make AJAX request to get price
+        fetch(`/api/calculate-customization-price/?shoe_id=${shoeId}&base_color_id=${baseColorId}&accent_color_id=${accentColorId}&pattern_id=${patternId}&quantity=${quantity}`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.error) {
+              console.error(data.error);
+              return;
+            }
+
+            // Update price displays
+            basePrice.textContent = `$${data.base_price.toFixed(2)}`;
+            customizationPrice.textContent = `$${data.customization_price.toFixed(2)}`;
+            priceDisplay.textContent = `$${data.total_price.toFixed(2)}`;
+          })
+          .catch(error => {
+            console.error('Error calculating price:', error);
+          });
+      }
+
+      // Function to update shoe image
+      function updateShoeImage() {
+        const shoeId = shoeSelect.value;
+
+        if (!shoeId) {
+          shoeImage.src = "{{ STATIC_URL }}img/placeholder.png";
+          return;
+        }
+
+        // Fetch the image URL from the server
+        fetch(`/api/get-shoe-image/?shoe_id=${shoeId}`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              shoeImage.src = data.image_url;
+            } else {
+              console.error(data.error);
+              shoeImage.src = "{{ STATIC_URL }}img/placeholder.png";
+            }
+          })
+          .catch(error => {
+            console.error('Error fetching shoe image:', error);
+            shoeImage.src = "{{ STATIC_URL }}img/placeholder.png";
+          });
+      }
+
+      // Add event listeners
+      if (shoeSelect) {
+        shoeSelect.addEventListener('change', function() {
+          updatePrice();
+          updateShoeImage();
+        });
+      }
+
+      if (baseColorSelect) {
+        baseColorSelect.addEventListener('change', updatePrice);
+      }
+
+      if (accentColorSelect) {
+        accentColorSelect.addEventListener('change', updatePrice);
+      }
+
+      if (patternSelect) {
+        patternSelect.addEventListener('change', updatePrice);
+      }
+
+      if (quantityInput) {
+        quantityInput.addEventListener('change', updatePrice);
+      }
+
+      // Color circle selection
+      baseColorCircles.forEach(circle => {
+        circle.addEventListener('click', function() {
+          // Remove selected class from all circles
+          baseColorCircles.forEach(c => c.classList.remove('selected'));
+          // Add selected class to clicked circle
+          this.classList.add('selected');
+          // Update hidden input value
+          baseColorSelect.value = this.dataset.colorId;
+          // Update price
+          updatePrice();
+        });
+      });
+
+      accentColorCircles.forEach(circle => {
+        circle.addEventListener('click', function() {
+          // Remove selected class from all circles
+          accentColorCircles.forEach(c => c.classList.remove('selected'));
+          // Add selected class to clicked circle
+          this.classList.add('selected');
+          // Update hidden input value
+          accentColorSelect.value = this.dataset.colorId;
+          // Update price
+          updatePrice();
+        });
+      });
+
+      patternButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          // Remove selected class from all buttons
+          patternButtons.forEach(b => b.classList.remove('selected'));
+          // Add selected class to clicked button
+          this.classList.add('selected');
+          // Update hidden input value
+          patternSelect.value = this.dataset.patternId;
+          // Update price
+          updatePrice();
+        });
+      });
+
+      // Initialize
+      if (shoeSelect && shoeSelect.value) {
+        updatePrice();
+        updateShoeImage();
+      }
+    });
+  </script>
+{% endblock %}
+
+{% block content %}
+  <!-- Background Blobs -->
+  <div class="blob bg-indigo-500/30 w-[600px] h-[600px] top-0 left-0 -translate-x-1/3"></div>
+  <div class="blob bg-indigo-600 w-[500px] h-[500px] top-0 right-0 translate-x-1/4"></div>
+  <div class="blob bg-indigo-500/30 w-[700px] h-[700px] bottom-0 left-1/4 translate-y-1/3"></div>
+  <div class="blob bg-indigo-800/70 w-[600px] h-[600px] bottom-0 right-0 translate-x-1/3 translate-y-1/3"></div>
+
+  <div class="container mx-auto px-4 md:px-8 py-8 relative z-10">
+    <!-- Customization Title -->
+    <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold text-center mb-4">
+      Customize Your Sneaker
+    </h1>
+
+    <p class="text-center max-w-3xl mx-auto mb-10">
+      Whether you're remixing a classic into something never seen before or
+      simplifying the latest drop into a totally neutral palette, your
+      customization journey starts with choosing a shoe. Luckily, we're always
+      adding newness so you can find the just-right way to express your style
+    </p>
+
+    <form method="post" action="{% url 'customize' %}">
+      {% csrf_token %}
+      <div class="flex flex-col lg:flex-row gap-8 mt-8">
+        <!-- Left Column - Sneaker Image and Model Selection -->
+        <div class="lg:w-1/2 space-y-6">
+          <!-- Sneaker Image -->
+          <div class="bg-white rounded-lg p-6 shadow-md flex items-center justify-center">
+            <img id="shoe-preview" src="{{ STATIC_URL }}img/placeholder.png" alt="Sneaker preview" class="max-w-full h-auto max-h-80" />
+          </div>
+
+          <!-- Model Selection -->
+          <div class="bg-gray-200 py-3 px-4 rounded-md">
+            <label for="id_shoe" class="block text-gray-700 mb-2">Choose your model</label>
+            {{ form.shoe }}
+          </div>
+        </div>
+
+        <!-- Right Column - Customization Options -->
+        <div class="lg:w-1/2 space-y-8">
+          <!-- Base Color Selection -->
+          <div>
+            <h2 class="text-2xl font-semibold mb-4">Choose a base colour</h2>
+            <div class="flex flex-wrap gap-3 p-4 bg-white rounded-full shadow-sm">
+              {{ form.base_color.as_hidden }}
+              {% if base_colors %}
+                {% for color in base_colors %}
+                  <div class="color-circle base-color-circle {% if form.base_color.value == color.id %}selected{% endif %}" 
+                       style="background-color: {{ color.color_code }};" 
+                       data-color-id="{{ color.id }}"
+                       title="{{ color.name }}">
+                  </div>
+                {% endfor %}
+              {% else %}
+                <div class="text-gray-500">No base colors available</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Accent Color Selection -->
+          <div>
+            <h2 class="text-2xl font-semibold mb-4">Choose an accent colour</h2>
+            <div class="flex flex-wrap gap-3 p-4 bg-white rounded-full shadow-sm">
+              {{ form.accent_color.as_hidden }}
+              {% if accent_colors %}
+                {% for color in accent_colors %}
+                  <div class="color-circle accent-color-circle {% if form.accent_color.value == color.id %}selected{% endif %}" 
+                       style="background-color: {{ color.color_code }};" 
+                       data-color-id="{{ color.id }}"
+                       title="{{ color.name }}">
+                  </div>
+                {% endfor %}
+              {% else %}
+                <div class="text-gray-500">No accent colors available</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Pattern Selection -->
+          <div>
+            <h2 class="text-2xl font-semibold mb-4">Choose a pattern</h2>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {{ form.sole_pattern.as_hidden }}
+              {% if patterns %}
+                {% for pattern in patterns %}
+                  <div class="pattern-btn bg-gray-200 py-3 px-4 rounded-md text-center {% if form.sole_pattern.value == pattern.id %}selected{% endif %}" 
+                       data-pattern-id="{{ pattern.id }}">
+                    {{ pattern.name }}
+                  </div>
+                {% endfor %}
+              {% else %}
+                <div class="text-gray-500 col-span-3">No patterns available</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Quantity Selection -->
+          <div>
+            <h2 class="text-2xl font-semibold mb-4">Quantity</h2>
+            {{ form.quantity }}
+          </div>
+
+          <!-- Price and Add to Cart -->
+          <div class="pt-6">
+            <div class="flex justify-between items-center mb-4">
+              <h2 class="text-2xl font-semibold">Total Price:</h2>
+              <div>
+                <div>Base price: <span id="base-price">${{ initial_price|default:"0.00" }}</span></div>
+                <div>Customization: <span id="customization-price">$0.00</span></div>
+                <div class="text-2xl font-bold">Total: <span id="total-price">${{ initial_price|default:"0.00" }}</span></div>
+              </div>
+            </div>
+            <button type="submit" class="w-full bg-gray-200 hover:bg-gray-300 py-4 text-xl font-semibold rounded-md transition">
+              Add to cart
+            </button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+{% endblock %}

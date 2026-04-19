@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Retro Sneaks - Login Required{% endblock %}
+
+{% block extra_css %}
+  .page-container {
+    position: relative;
+    min-height: 80vh;
+    width: 100%;
+    background-image: url("{{ STATIC_URL }}img/bg.png");
+    background-size: cover;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+  }
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <!-- Form Container -->
+  <div class="md:w-1/2 flex flex-col items-center justify-center mt-8 md:mt-0">
+    <div class="flex flex-col items-center space-y-4 max-w-xs w-full">
+      <div class="bg-gray-300 px-12 py-3 text-5xl font-medium rounded-full w-full text-center">
+        User
+      </div>
+
+      <p class="text-center text-gray-700">Login or sign up to buy</p>
+
+      <a href="{% url 'login' %}" class="w-full bg-gray-300 hover:bg-gray-400 py-3 rounded-full text-black font-medium transition text-center">
+        Log in
+      </a>
+      
+      <a href="{% url 'signup' %}" class="w-full bg-indigo-400 hover:bg-indigo-500 py-3 rounded-full text-white font-medium transition text-center">
+        Sign up
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,253 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ shoe.name }} - Retro Sneaks{% endblock %}
+
+{% block extra_css %}
+  .size-btn {
+    transition: all 0.2s;
+  }
+  .size-btn:hover {
+    transform: translateY(-2px);
+  }
+  .size-btn.selected {
+    background-color: #4f46e5;
+    color: white;
+  }
+  .quantity-btn {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+  }
+  .slider {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    overflow: hidden;
+  }
+  .slides {
+    display: flex;
+    width: 100%;
+    transition: transform 0.5s ease;
+  }
+  .slide {
+    min-width: 100%;
+    flex-shrink: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .slide img {
+    max-height: 500px;
+    width: auto;
+    object-fit: contain;
+  }
+  .slider-nav {
+    position: absolute;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 10;
+  }
+{% endblock %}
+
+{% block content %}
+  <div class="container mx-auto px-4 py-8">
+    <div class="flex flex-col md:flex-row gap-8">
+      <!-- Left Column - Product Images -->
+      <div class="md:w-1/2">
+        <div class="bg-white p-6 rounded-lg shadow-md mb-4">
+          {% if images %}
+            <div class="slider">
+              <div class="slides" id="product-slides">
+                {% for image in images %}
+                  <div class="slide">
+                    <img src="{{ image.image.url }}" alt="{{ shoe.name }}" class="w-auto h-auto object-contain max-h-80 mx-auto" />
+                  </div>
+                {% endfor %}
+              </div>
+              <div class="slider-nav flex justify-center mt-4 space-x-2" id="slider-nav"></div>
+            </div>
+          {% else %}
+            <img src="{{ STATIC_URL }}img/placeholder.png" alt="{{ shoe.name }}" class="w-auto h-auto object-contain max-h-80 mx-auto" />
+          {% endif %}
+        </div>
+        
+        <!-- Thumbnails -->
+        {% if images.count > 1 %}
+          <div class="grid grid-cols-4 gap-2">
+            {% for image in images %}
+              <div class="thumbnail-item cursor-pointer" data-index="{{ forloop.counter0 }}">
+                <img src="{{ image.image.url }}" alt="Thumbnail" class="w-full h-auto object-cover rounded-md" />
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+      
+      <!-- Right Column - Product Details -->
+      <div class="md:w-1/2">
+        <h1 class="text-3xl font-bold mb-2">{{ shoe.name }}</h1>
+        <p class="text-gray-600 mb-4">Condition: {{ shoe.get_condition_display }}</p>
+        
+        <div class="mb-6">
+          <p class="text-2xl font-bold">${{ shoe.price }}</p>
+        </div>
+        
+        <div class="mb-6">
+          <h2 class="text-lg font-semibold mb-2">Description</h2>
+          <p class="text-gray-700">{{ shoe.description }}</p>
+        </div>
+        
+        <form method="post" action="{% url 'product_details' shoe.id %}">
+          {% csrf_token %}
+          
+          <!-- Size Selection -->
+          <div class="mb-6">
+            <h2 class="text-lg font-semibold mb-2">Select Size</h2>
+            <div class="grid grid-cols-4 gap-2">
+              {% for size in available_sizes %}
+                <label class="size-btn bg-gray-200 py-2 text-center rounded-md cursor-pointer {% if size == shoe.size %}selected{% endif %}">
+                  <input type="radio" name="size" value="{{ size }}" class="hidden" {% if size == shoe.size %}checked{% endif %}>
+                  {{ size }}
+                </label>
+              {% endfor %}
+            </div>
+          </div>
+          
+          <!-- Quantity Selection -->
+          <div class="mb-6">
+            <h2 class="text-lg font-semibold mb-2">Quantity</h2>
+            <div class="flex items-center">
+              <div class="quantity-btn bg-gray-200 rounded-l" id="decrease-quantity">-</div>
+              <input type="number" name="quantity" id="quantity" value="1" min="1" max="{{ shoe.stock }}"
+                class="w-16 h-10 text-center border-t border-b border-gray-300" />
+              <div class="quantity-btn bg-gray-200 rounded-r" id="increase-quantity">+</div>
+            </div>
+          </div>
+          
+          <!-- Total Price -->
+          <div class="mb-6">
+            <h2 class="text-lg font-semibold">Total Price:</h2>
+            <p class="text-2xl font-bold" id="total-price">${{ shoe.price }}</p>
+          </div>
+          
+          <!-- Action Buttons -->
+          <div class="flex flex-col space-y-4">
+            {% if user.is_authenticated %}
+              <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-md transition">
+                Add to Cart
+              </button>
+            {% else %}
+              <a href="{% url 'w_account' %}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-md transition text-center">
+                Add to Cart
+              </a>
+            {% endif %}
+            
+            <a href="{% url 'customize' %}?shoe_id={{ shoe.id }}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-md transition text-center">
+              Customize
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Size Selection
+      const sizeButtons = document.querySelectorAll('.size-btn');
+      sizeButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+          sizeButtons.forEach(b => b.classList.remove('selected'));
+          this.classList.add('selected');
+        });
+      });
+      
+      // Quantity Controls
+      const decreaseBtn = document.getElementById('decrease-quantity');
+      const increaseBtn = document.getElementById('increase-quantity');
+      const quantityInput = document.getElementById('quantity');
+      const totalPriceDisplay = document.getElementById('total-price');
+      const basePrice = {{ shoe.price }};
+      
+      function updateTotalPrice() {
+        const quantity = parseInt(quantityInput.value);
+        const total = basePrice * quantity;
+        totalPriceDisplay.textContent = `$${total.toFixed(2)}`;
+      }
+      
+      decreaseBtn.addEventListener('click', function() {
+        let quantity = parseInt(quantityInput.value);
+        if (quantity > 1) {
+          quantityInput.value = quantity - 1;
+          updateTotalPrice();
+        }
+      });
+      
+      increaseBtn.addEventListener('click', function() {
+        let quantity = parseInt(quantityInput.value);
+        if (quantity < {{ shoe.stock }}) {
+          quantityInput.value = quantity + 1;
+          updateTotalPrice();
+        }
+      });
+      
+      quantityInput.addEventListener('change', updateTotalPrice);
+      
+      // Image Slider
+      {% if images.count > 1 %}
+        const slides = document.getElementById('product-slides');
+        const slideCount = slides.children.length;
+        let currentSlide = 0;
+        
+        // Create navigation dots
+        const sliderNav = document.getElementById('slider-nav');
+        for (let i = 0; i < slideCount; i++) {
+          const dot = document.createElement('div');
+          dot.classList.add('w-3', 'h-3', 'bg-gray-300', 'rounded-full', 'cursor-pointer');
+          if (i === 0) dot.classList.add('bg-gray-700');
+          dot.dataset.slide = i;
+          dot.addEventListener('click', () => {
+            goToSlide(i);
+          });
+          sliderNav.appendChild(dot);
+        }
+        
+        // Thumbnail click
+        const thumbnails = document.querySelectorAll('.thumbnail-item');
+        thumbnails.forEach(thumb => {
+          thumb.addEventListener('click', function() {
+            const index = parseInt(this.dataset.index);
+            goToSlide(index);
+          });
+        });
+        
+        function goToSlide(slideIndex) {
+          currentSlide = slideIndex;
+          slides.style.transform = `translateX(-${currentSlide * 100}%)`;
+          
+          // Update active dot
+          const dots = sliderNav.querySelectorAll('div');
+          dots.forEach((dot, index) => {
+            if (index === currentSlide) {
+              dot.classList.remove('bg-gray-300');
+              dot.classList.add('bg-gray-700');
+            } else {
+              dot.classList.remove('bg-gray-700');
+              dot.classList.add('bg-gray-300');
+            }
+          });
+        }
+      {% endif %}
+    });
+  </script>
+{% endblock %}

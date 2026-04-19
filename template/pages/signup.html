@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block title %}Retro Sneaks - Create an account{% endblock %}
+
+{% block extra_css %}
+  .page-container {
+    position: relative;
+    min-height: 80vh;
+    width: 100%;
+    background-image: url("{{ STATIC_URL }}img/bg.png");
+    background-size: cover;
+    background-size: 100% 110%;
+    background-repeat: no-repeat;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 20px;
+  }
+
+  .form-container {
+    width: 100%;
+    max-width: 650px;
+    background-color: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin-right: 40px;
+  }
+
+  .divider {
+    position: relative;
+    text-align: center;
+    margin: 1.5rem 0;
+  }
+
+  .divider::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background-color: #e5e7eb;
+    z-index: -1;
+  }
+
+  @media (max-width: 768px) {
+    .page-container {
+      justify-content: center;
+      padding: 10px;
+    }
+
+    .form-container {
+      margin-right: 0;
+    }
+  }
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <!-- Form Container -->
+  <div class="form-container">
+    <div class="p-8 md:p-10">
+      <h1 class="text-3xl font-bold text-gray-800 mb-4 text-center">
+        Create an account
+      </h1>
+      <p class="text-center mb-8 text-gray-600">
+        Already have an account?
+        <a href="{% url 'login' %}" class="text-indigo-500 font-medium">Log in</a>
+      </p>
+
+      <form method="post" action="{% url 'signup' %}">
+        {% csrf_token %}
+        <div class="mb-6">
+          <label for="id_username" class="block text-gray-600 mb-2">What should we call you?</label>
+          {{ form.username }}
+        </div>
+
+        <div class="mb-6">
+          <label for="id_email" class="block text-gray-600 mb-2">What's your email?</label>
+          {{ form.email }}
+        </div>
+
+        <div class="mb-2">
+          <div class="flex justify-between items-center mb-2">
+            <label for="id_password1" class="block text-gray-600">Create a password</label>
+            <button type="button" class="text-gray-500 flex items-center" id="toggle-password">
+              <span>Show</span>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+            </button>
+          </div>
+          {{ form.password1 }}
+        </div>
+
+        <p class="text-gray-500 text-sm mb-6">
+          Use 8 or more characters with a mix of letters, numbers & symbols
+        </p>
+
+        <div class="mb-6">
+          <label for="id_password2" class="block text-gray-600 mb-2">Confirm password</label>
+          {{ form.password2 }}
+        </div>
+
+        <button type="submit" class="w-full bg-indigo-400 hover:bg-indigo-500 text-white font-medium py-3 px-4 rounded-lg transition duration-300 mb-8">
+          Create an account
+        </button>
+
+        <div class="relative flex items-center justify-center mb-6">
+          <hr class="w-full border-gray-300" />
+          <span class="absolute bg-white px-4 text-gray-500">OR Continue with</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mt-6">
+          <a href="#" class="flex items-center justify-center py-2 px-4 border border-gray-300 rounded-full hover:bg-gray-50 transition duration-300">
+            <img src="{{ STATIC_URL }}img/fb.png" alt="Facebook" class="h-6 w-6 mr-2" />
+            Facebook
+          </a>
+          <a href="#" class="flex items-center justify-center py-2 px-4 border border-gray-300 rounded-full hover:bg-gray-50 transition duration-300">
+            <img src="{{ STATIC_URL }}img/google.png" alt="Google" class="h-6 w-6 mr-2" />
+            Google
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const togglePasswordBtn = document.getElementById('toggle-password');
+    const passwordInput = document.getElementById('id_password1');
+    const confirmPasswordInput = document.getElementById('id_password2');
+    
+    if (togglePasswordBtn && passwordInput && confirmPasswordInput) {
+      togglePasswordBtn.addEventListener('click', function() {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        confirmPasswordInput.setAttribute('type', type);
+        
+        // Update button text
+        const span = togglePasswordBtn.querySelector('span');
+        if (span) {
+          span.textContent = type === 'password' ? 'Show' : 'Hide';
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}

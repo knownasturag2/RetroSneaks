@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+
+{% block title %}Retro Sneaks - Essentials{% endblock %}
+
+{% block content %}
+  <!-- Filter and Sort Section -->
+  <div class="container mx-auto px-4 py-6 flex flex-col md:flex-row justify-between items-center">
+    <div class="flex items-center mb-4 md:mb-0">
+      <form method="get" action="{% url 'essentials' %}" class="flex items-center">
+        <button type="button" class="p-2 flex items-center" id="filter-button">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+          </svg>
+          Filter
+        </button>
+        
+        <div id="filter-dropdown" class="hidden absolute mt-2 bg-white shadow-lg rounded-md p-4 z-10 top-32">
+          <h3 class="font-semibold mb-2">Categories</h3>
+          <div class="space-y-2">
+            {% for category in categories %}
+              <div>
+                <input type="radio" id="category-{{ category.id }}" name="category" value="{{ category.slug }}" 
+                  {% if current_category == category.slug %}checked{% endif %}>
+                <label for="category-{{ category.id }}">{{ category.name }}</label>
+              </div>
+            {% endfor %}
+          </div>
+          <button type="submit" class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded-md">Apply Filters</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="relative w-full max-w-md mx-4">
+      <form method="get" action="{% url 'essentials' %}" class="flex items-center">
+        <input type="text" name="search" placeholder="Search accessories..." value="{{ search_query|default:'' }}"
+          class="w-full pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-200" />
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 absolute left-3 top-2.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <button type="submit" class="hidden">Search</button>
+      </form>
+    </div>
+
+    <div class="mt-4 md:mt-0">
+      <form method="get" action="{% url 'essentials' %}" id="sort-form">
+        <input type="hidden" name="category" value="{{ current_category|default:'' }}">
+        <input type="hidden" name="search" value="{{ search_query|default:'' }}">
+        <select name="sort" onchange="document.getElementById('sort-form').submit()" 
+          class="bg-gray-200 px-4 py-2 rounded-md text-sm">
+          <option value="" {% if not sort_by %}selected{% endif %}>Default Sorting</option>
+          <option value="price_asc" {% if sort_by == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
+          <option value="price_desc" {% if sort_by == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
+        </select>
+      </form>
+    </div>
+  </div>
+
+  <!-- Product Grid -->
+  <main class="container mx-auto px-4 py-8">
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      {% if accessories %}
+        {% for accessory in accessories %}
+          <div class="product-card bg-white p-4 rounded-lg shadow-lg max-w-xs w-full">
+            <!-- Image -->
+            <div class="relative">
+              {% if accessory.primary_image %}
+                <img src="{{ accessory.primary_image.image.url }}" alt="{{ accessory.name }}" class="w-full rounded-lg" />
+              {% else %}
+                <img src="{{ MEDIA_URL }}img/placeholder.png" alt="{{ accessory.name }}" class="w-full rounded-lg" />
+              {% endif %}
+            </div>
+            <!-- Product Details -->
+            <div class="mt-4">
+              <p class="text-gray-500 text-sm">{{ accessory.category.name|upper }}</p>
+              <h2 class="text-lg font-semibold">{{ accessory.name }}</h2>
+              <div class="flex items-center space-x-2 mt-1">
+                <span class="text-xl font-bold">${{ accessory.price }}</span>
+              </div>
+            </div>
+            <!-- Select Options Button -->
+            <a href="{% url 'product_details' accessory.id %}" 
+              class="mt-4 w-full bg-[#0B215F] text-white font-semibold py-2 rounded-lg transition flex items-center justify-center space-x-2">
+              <span>Select Options</span>
+            </a>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="col-span-full text-center py-12">
+          <p class="text-xl text-gray-500">No accessories found matching your criteria.</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Pagination -->
+    {% if accessories.has_other_pages %}
+      <div class="flex justify-center mt-12">
+        <nav class="inline-flex rounded-md shadow">
+          {% if accessories.has_previous %}
+            <a href="?page={{ accessories.previous_page_number }}{% if current_category %}&category={{ current_category }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" 
+              class="py-2 px-4 bg-gray-200 text-gray-600 rounded-l-md hover:bg-gray-300">
+              <span class="sr-only">Previous</span>
+              <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+              </svg>
+            </a>
+          {% endif %}
+          
+          {% for i in accessories.paginator.page_range %}
+            {% if accessories.number == i %}
+              <span class="py-2 px-4 bg-gray-200 text-gray-800 font-medium">{{ i }}</span>
+            {% else %}
+              <a href="?page={{ i }}{% if current_category %}&category={{ current_category }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" 
+                class="py-2 px-4 bg-gray-200 text-gray-600 hover:bg-gray-300">{{ i }}</a>
+            {% endif %}
+          {% endfor %}
+          
+          {% if accessories.has_next %}
+            <a href="?page={{ accessories.next_page_number }}{% if current_category %}&category={{ current_category }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" 
+              class="py-2 px-4 bg-gray-200 text-gray-600 rounded-r-md hover:bg-gray-300">
+              <span class="sr-only">Next</span>
+              <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+              </svg>
+            </a>
+          {% endif %}
+        </nav>
+      </div>
+    {% endif %}
+  </main>
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const filterButton = document.getElementById('filter-button');
+      const filterDropdown = document.getElementById('filter-dropdown');
+      
+      filterButton.addEventListener('click', function() {
+        filterDropdown.classList.toggle('hidden');
+      });
+      
+      // Close dropdown when clicking outside
+      document.addEventListener('click', function(event) {
+        if (!filterButton.contains(event.target) && !filterDropdown.contains(event.target)) {
+          filterDropdown.classList.add('hidden');
+        }
+      });
+    });
+  </script>
+{% endblock %}
